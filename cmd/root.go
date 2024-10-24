@@ -43,6 +43,7 @@ func (c *RootCommand) Run(ctx context.Context) error {
 	reg := metrics.NewRegistry()
 	server := server.New(reg, addr)
 
+	c.Logger.InfoContext(ctx, "starting exporter...")
 	go func(ctx context.Context) {
 		if err := server.ListenAndServe(); err != nil {
 			c.Logger.ErrorContext(ctx, "failed to listen and serve", slog.String("error", err.Error()))
@@ -50,6 +51,7 @@ func (c *RootCommand) Run(ctx context.Context) error {
 	}(ctx)
 
 	<-ctx.Done()
+	c.Logger.InfoContext(ctx, "signal interupped; shutting down...")
 	if err := server.Shutdown(ctx); err != nil {
 		c.Logger.ErrorContext(ctx, "failed to shutdown server", slog.String("error", err.Error()))
 	}

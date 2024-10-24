@@ -1,0 +1,28 @@
+services:
+  exporter:
+    container_name: exporter
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    environment:
+      LOG_LEVEL: debug
+    
+  pdns:
+    image: powerdns/pdns-auth-master:latest
+    container_name: pdns
+    environment:
+      - PDNS_LOCAL_ADDRESS=0.0.0.0
+      - PDNS_API_KEY=sampleapikey
+      - PDNS_API=yes
+      - PDNS_WEBSERVER=yes
+      - PDNS_WEBSERVER_ALLOW_FROM=0.0.0.0/0
+      - PDNS_MASTER=yes
+    ports:
+      - "8053:53/tcp"
+      - "8053:53/udp"
+      - "8081:8081"
+    volumes:
+      - pdns-config:/etc/powerdns
+
+volumes:
+  pdns-config:
