@@ -6,23 +6,41 @@ services:
       dockerfile: ./Dockerfile
     environment:
       LOG_LEVEL: debug
-    
+      POWERDNS_API_KEY: sampleapikey
+    ports:
+      - "8080:8080"
+    command: /bin/powerdns-exporter --host 0.0.0.0 --port 8080 --powerdns-webserver-host pdns --powerdns-webserver-port 8081
+
   pdns:
     image: powerdns/pdns-auth-master:latest
     container_name: pdns
     environment:
-      - PDNS_LOCAL_ADDRESS=0.0.0.0
       - PDNS_API_KEY=sampleapikey
-      - PDNS_API=yes
-      - PDNS_WEBSERVER=yes
-      - PDNS_WEBSERVER_ALLOW_FROM=0.0.0.0/0
-      - PDNS_MASTER=yes
     ports:
       - "8053:53/tcp"
       - "8053:53/udp"
       - "8081:8081"
     volumes:
-      - pdns-config:/etc/powerdns
+      - ./development/powerdns/pdns.conf:/etc/powerdns/pdns.conf   # pdns.confファイルをコンテナにマウント
+      - pdns-data:/var/lib/powerdns  # データ用のボリューム（オプション）
+    depends_on:
+      mysql:
+        condition: service_healthy
 
+  mysql:
+    container_name: mysql
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./development/mysql/entrypoint.d:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  
 volumes:
-  pdns-config:
+  pdns-data:   # 必要であれば、データ用のボリューム
+  mysql-data:

@@ -8,6 +8,8 @@ COPY ./main.go ./main.go
 COPY server server
 COPY metrics metrics
 COPY cmd cmd
+COPY powerdns powerdns
+COPY middleware middleware
 
 RUN CGO_ENABLED=0 go mod download
 RUN CGO_ENABLED=0 go build -o /bin/powerdns-exporter .
