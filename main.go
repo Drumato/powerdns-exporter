@@ -10,6 +10,10 @@ import (
 	"github.com/Drumato/powerdns-exporter/cmd"
 )
 
+const (
+	powerDNSAPIKeyEnv = "POWERDNS_API_KEY"
+)
+
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
@@ -28,7 +32,14 @@ func main() {
 	}
 
 	logger := slog.New(slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: logLevel}))
-	if err := cmd.New(logger).ExecuteContext(ctx); err != nil {
+
+	apiKey, ok := os.LookupEnv(powerDNSAPIKeyEnv)
+	if !ok {
+		logger.ErrorContext(ctx, "the environment variable 'POWERDNS_API_KEY' must be defined")
+		os.Exit(1)
+	}
+
+	if err := cmd.New(logger, apiKey).ExecuteContext(ctx); err != nil {
 		logger.ErrorContext(ctx, "failed to run", slog.String("error", err.Error()))
 		os.Exit(1)
 	}
